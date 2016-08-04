@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ScalesModule.iml" filepath="$PROJECT_DIR$/.idea/modules/ScalesModule.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scalesmodule/scalesmodule.iml" filepath="$PROJECT_DIR$/.idea/modules/scalesmodule/scalesmodule.iml" />
+    </modules>
+  </component>
+</project>

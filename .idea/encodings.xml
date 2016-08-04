@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding" defaultCharsetForPropertiesFiles="UTF-8">
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/kostya/cranescale/settings/ActivityPreferences.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/scalesmodulelib/src/main/java/com/konst/module/Commands.java" charset="windows-1251" />
+    <file url="file://$PROJECT_DIR$/scalesmodulelib/src/main/java/com/konst/module/ConnectResultCallback.java" charset="windows-1251" />
+    <file url="file://$PROJECT_DIR$/scalesmodulelib/src/main/java/com/konst/module/InterfaceModule.java" charset="windows-1251" />
+    <file url="file://$PROJECT_DIR$/scalesmodulelib/src/main/java/com/konst/module/Module.java" charset="windows-1251" />
+    <file url="file://$PROJECT_DIR$/scalesmodulelib/src/main/java/com/konst/module/boot/BootModule.java" charset="windows-1251" />
+    <file url="file://$PROJECT_DIR$/scalesmodulelib/src/main/java/com/konst/module/scale/ScaleModule.java" charset="windows-1251" />
+    <file url="PROJECT" charset="UTF-8" />
+  </component>
+</project>

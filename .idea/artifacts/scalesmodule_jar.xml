@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="scalesmodule:jar">
+    <output-path>$PROJECT_DIR$/build/classes/artifacts/scalesmodule_jar</output-path>
+    <root id="archive" name="scalesmodule.jar">
+      <element id="module-output" name="scalesmodule" />
+    </root>
+  </artifact>
+</component>
