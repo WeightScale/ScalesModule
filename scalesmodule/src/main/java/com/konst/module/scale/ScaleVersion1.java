@@ -15,11 +15,6 @@ import com.konst.module.ErrorModuleException;
  * @author Kostya
  */
 public class ScaleVersion1 extends ScaleVersion {
-    private ScaleModule scaleModule;
-    /** Текущий вес.  */
-    private int weight;
-    /** Максимальный вес для весов. */
-    private int weightMax;
 
     ScaleVersion1(ScaleModule module){
         scaleModule = module;
@@ -90,26 +85,12 @@ public class ScaleVersion1 extends ScaleVersion {
     }
 
     @Override
-    public int getWeight() { return weight; }
-
-    @Override
     int getSensor() {
         return scaleModule.getSensorTenzo();
     }
 
     @Override
     public int getMarginTenzo() { return 0; }
-
-    @Override
-    public int getWeightMax() { return weightMax; }
-
-    @Override
-    public void setWeightMax(int weightMax) { this.weightMax = weightMax; }
-
-    /*@Override
-    public void setSensor(int sensor) {
-        sensorTenzo = sensor;
-    }*/
 
     protected void parserData(String d) throws Exception {
         StringBuilder dataBuffer = new StringBuilder(d);
@@ -131,7 +112,5 @@ public class ScaleVersion1 extends ScaleVersion {
         }
         //}
     }
-
-
 
 }

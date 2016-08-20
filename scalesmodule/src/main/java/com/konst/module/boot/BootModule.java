@@ -19,6 +19,7 @@ import android.os.Message;
 import android.util.Log;
 import com.konst.module.*;
 import com.konst.module.bluetooth.BluetoothHandler;
+import com.konst.module.scale.InterfaceCallbackScales;
 
 import java.io.*;
 import java.util.UUID;
@@ -39,8 +40,8 @@ public class BootModule extends Module {
     /** Конструктор модуля бутлодера.
      * @param version Верситя бутлодера.
      */
-    private BootModule(Context context, String version, String address/*, InterfaceResultCallback event*/) throws Exception, ErrorDeviceException {
-        super(context, address/*, event*/);
+    private BootModule(Context context, String version, String address, InterfaceCallbackScales event) throws Exception, ErrorDeviceException {
+        super(context, address, event);
         //runnableBootConnect = new RunnableBootConnect();
         versionName = version;
         attach();
@@ -49,19 +50,19 @@ public class BootModule extends Module {
     /** Конструктор модуля бутлодера.
      * @param version Верситя бутлодера.
      */
-    private BootModule(Context context, String version, BluetoothDevice device/*, InterfaceResultCallback event*/) throws Exception, ErrorDeviceException {
-        super(context, device/*, event*/);
+    private BootModule(Context context, String version, BluetoothDevice device, InterfaceCallbackScales event) throws Exception, ErrorDeviceException {
+        super(context, device, event);
         //runnableBootConnect = new RunnableBootConnect();
         versionName = version;
         attach();
     }
 
-    public static void create(Context context, String version, String address/*, InterfaceResultCallback event*/) throws Exception, ErrorDeviceException {
-        instance = new BootModule(context, version, address/*, event*/);
+    public static void create(Context context, String version, String address, InterfaceCallbackScales event) throws Exception, ErrorDeviceException {
+        instance = new BootModule(context, version, address, event);
     }
 
-    public static void create(Context context, String version, BluetoothDevice device/*, InterfaceResultCallback event*/) throws Exception, ErrorDeviceException {
-        instance = new BootModule(context, version, device/*, event*/);
+    public static void create(Context context, String version, BluetoothDevice device, InterfaceCallbackScales event) throws Exception, ErrorDeviceException {
+        instance = new BootModule(context, version, device, event);
     }
 
     public static BootModule getInstance() { return instance; }

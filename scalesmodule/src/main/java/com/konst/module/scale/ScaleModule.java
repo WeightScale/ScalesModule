@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Главный класс для работы с весовым модулем. Инициализируем в теле программы. В абстрактных методах используем
- * возвращеные результаты после запуска метода {@link ScaleModule#create(Context, String, BluetoothDevice, Handler, InterfaceResultCallback)}}.
+ * возвращеные результаты после запуска метода {@link ScaleModule#create(Context, String, BluetoothDevice, Handler, InterfaceCallbackScales)}}.
  * Пример:
  * com.kostya.module.ScaleModule scaleModule = new com.kostya.module.ScaleModule("version module");
  * scaleModule.init("bluetooth device");
@@ -40,16 +40,11 @@ import java.util.concurrent.TimeUnit;
  */
 public class ScaleModule extends Module implements Serializable{
     private static ScaleModule instance;
+    private ObjectScales objectScales = new ObjectScales();
     private ScaleVersion version;
     private ThreadScalesProcess threadScalesProcess;
     private static final String TAG = ScaleModule.class.getName();
-    //private Handler handlerCmd;
-    //private RunnableAttach runnableAttach;
     private Thread threadAttach;
-
-    //private BluetoothClientThread bluetoothClientThread;
-    //private ThreadWeight threadWeight;
-    //private ThreadBatteryTemperature threadBatteryTemperature;
     /** Процент заряда батареи (0-100%). */
     private int battery;
     /** Температура в целсиях. */
@@ -86,8 +81,17 @@ public class ScaleModule extends Module implements Serializable{
     private int weightMargin;
     /** Делитель для авто ноль. */
     private static final int DIVIDER_AUTO_NULL = 3;
+    /** Количество стабильных показаний веса для авто сохранения. */
+    public static final int STABLE_NUM_MAX = 64;
     /** Флаг использования авто обнуленияю. */
     private boolean enableAutoNull = true;
+
+    public int getStepScale() {return stepScale; }
+
+    public void setStepScale(int stepScale) {this.stepScale = stepScale;}
+
+    /** Шаг дискреты. */
+    private int stepScale;
 
     /** Имя таблици google disk. */
     public String getSpreadsheet() {
@@ -162,42 +166,42 @@ public class ScaleModule extends Module implements Serializable{
      * @param moduleVersion Имя и номер версии в формате [[Имя][Номер]].
      * @throws Exception Ошибка при создании модуля.
      */
-    private ScaleModule(Context context, String moduleVersion, BluetoothDevice device/*, InterfaceResultCallback event*/) throws Exception, ErrorDeviceException {
-        super(context, device/*, event*/);
+    private ScaleModule(Context context, String moduleVersion, BluetoothDevice device, InterfaceCallbackScales event) throws Exception, ErrorDeviceException {
+        super(context, device, event);
         versionName = moduleVersion;
         attach();
     }
 
-    private ScaleModule(Context context, String moduleVersion, String device/*, InterfaceResultCallback event*/) throws Exception, ErrorDeviceException {
-        super(context, device/*, event*/);
+    private ScaleModule(Context context, String moduleVersion, String device, InterfaceCallbackScales event) throws Exception, ErrorDeviceException {
+        super(context, device, event);
         versionName = moduleVersion;
         attach();
     }
 
-    private ScaleModule(Context context, String moduleVersion, WifiManager wifiManager/*, InterfaceResultCallback event*/)throws Exception, ErrorDeviceException {
-        super(context, wifiManager/*, event*/);
+    private ScaleModule(Context context, String moduleVersion, WifiManager wifiManager, InterfaceCallbackScales event)throws Exception, ErrorDeviceException {
+        super(context, wifiManager, event);
         versionName = moduleVersion;
         attachWiFi();
     }
 
-    public static void create(Context context, String moduleVersion, BluetoothDevice device/*, InterfaceResultCallback event*/) throws Exception, ErrorDeviceException {
-        instance = new ScaleModule(context, moduleVersion, device/*, event*/);
+    public static void create(Context context, String moduleVersion, BluetoothDevice device, InterfaceCallbackScales event) throws Exception, ErrorDeviceException {
+        instance = new ScaleModule(context, moduleVersion, device, event);
     }
 
-    public static void create(Context context, String moduleVersion, BluetoothDevice device, Handler handler/*,InterfaceResultCallback event*/) throws Exception, ErrorDeviceException {
-        instance = new ScaleModule(context, moduleVersion, device/*, event*/);
+    public static void create(Context context, String moduleVersion, BluetoothDevice device, Handler handler, InterfaceCallbackScales event) throws Exception, ErrorDeviceException {
+        instance = new ScaleModule(context, moduleVersion, device, event);
     }
 
-    public static void create(Context context, String moduleVersion, String device, Handler handler/*,InterfaceResultCallback event*/) throws Exception, ErrorDeviceException {
-        instance = new ScaleModule(context, moduleVersion, device/*, event*/);
+    public static void create(Context context, String moduleVersion, String device, Handler handler, InterfaceCallbackScales event) throws Exception, ErrorDeviceException {
+        instance = new ScaleModule(context, moduleVersion, device, event);
     }
 
-    public static void create(Context context, String moduleVersion, String bluetoothDevice/*, InterfaceResultCallback event*/) throws Exception, ErrorDeviceException {
-        instance = new ScaleModule(context, moduleVersion, bluetoothDevice/*, event*/);
+    public static void create(Context context, String moduleVersion, String bluetoothDevice, InterfaceCallbackScales event) throws Exception, ErrorDeviceException {
+        instance = new ScaleModule(context, moduleVersion, bluetoothDevice, event);
     }
 
-    public static void createWiFi(Context context, String moduleVersion/*, InterfaceResultCallback event*/) throws Exception, ErrorDeviceException {
-        instance = new ScaleModule(context, moduleVersion, (WifiManager)context.getSystemService(Context.WIFI_SERVICE)/*, event*/);
+    public static void createWiFi(Context context, String moduleVersion, InterfaceCallbackScales event) throws Exception, ErrorDeviceException {
+        instance = new ScaleModule(context, moduleVersion, (WifiManager)context.getSystemService(Context.WIFI_SERVICE), event);
     }
 
     public static ScaleModule getInstance() { return instance; }
@@ -235,6 +239,7 @@ public class ScaleModule extends Module implements Serializable{
         try {
             version.load();
             getContext().sendBroadcast(new Intent(InterfaceModule.ACTION_LOAD_OK).putExtra(InterfaceModule.EXTRA_MODULE, new ObjectScales()));
+            resultCallback.onCallback(instance);
             //resultCallback.resultConnect(ResultConnect.STATUS_LOAD_OK, "",instance);
         }  catch (ErrorTerminalException e) {
             getContext().sendBroadcast(new Intent(InterfaceModule.ACTION_TERMINAL_ERROR).putExtra(InterfaceModule.EXTRA_MODULE, new ObjectScales()));
@@ -255,7 +260,7 @@ public class ScaleModule extends Module implements Serializable{
      * @return true - Версия правильная.
      */
     @Override
-    public boolean isVersion() {
+    public boolean isVersion() throws Exception {
         String vrs = getModuleVersion(); //Получаем версию весов
         if (vrs.startsWith(versionName)) {
             try {
@@ -264,11 +269,13 @@ public class ScaleModule extends Module implements Serializable{
                 //setVersion(fetchVersion(numVersion));
                 version = fetchVersion(numVersion);
             } catch (Exception e) {
-                return false;
+                throw new Exception(e);
             }
+            /** Если версия правильная создаем обьек и посылаем сообщения. */
+            objectScales = new ObjectScales();
             return true;
         }
-        return false;
+        throw new Exception("Это не весы или неправильная версия!!!");
     }
 
     /** Отсоединение от весового модуля.
@@ -280,6 +287,8 @@ public class ScaleModule extends Module implements Serializable{
         //stopMeasuringWeight();
         //stopMeasuringBatteryTemperature();
         //disconnect();
+        stopProcess();
+        bluetoothConnectReceiver.unregister();
         if (bluetoothProcessManager != null){
             bluetoothProcessManager.stopProcess();
         }
@@ -779,20 +788,22 @@ public class ScaleModule extends Module implements Serializable{
     }*/
 
     private class ThreadScalesProcess extends Thread{
-        private final ObjectScales objectScales;
+        //private final ObjectScales objectScales;
         private int numTimeTemp = 101;
+        private int tempWeight;
+
         private boolean cancel;
         private static final int PERIOD_UPDATE = 20;
 
         ThreadScalesProcess(){
-            objectScales = new ObjectScales();
+            //objectScales = new ObjectScales();
         }
 
         @Override
         public void run() {
             while (!interrupted() && !cancel){
                 try{
-                    objectScales.setWeight(version.updateWeight());
+                    objectScales.setWeight(getWeightToStepMeasuring(version.updateWeight()));
                     ResultWeight resultWeight;
                     if (objectScales.getWeight() == Integer.MIN_VALUE) {
                         resultWeight = ResultWeight.WEIGHT_ERROR;
@@ -803,7 +814,21 @@ public class ScaleModule extends Module implements Serializable{
                             resultWeight = ResultWeight.WEIGHT_NORMAL;
                         }
                     }
+                    objectScales.setResultWeight(resultWeight);
                     objectScales.setTenzoSensor(version.getSensor());
+
+                    if (tempWeight - getStepScale() <= objectScales.getWeight() && tempWeight + getStepScale() >= objectScales.getWeight()) {
+                        if (objectScales.getStableNum() <= STABLE_NUM_MAX){
+                            if (objectScales.getStableNum() == STABLE_NUM_MAX) {
+                                getContext().sendBroadcast(new Intent(InterfaceModule.ACTION_WEIGHT_STABLE));
+                            }
+                            objectScales.setStableNum(objectScales.getStableNum()+1);
+                        }
+                    } else {
+                        objectScales.setStableNum(0);
+                    }
+                    tempWeight = objectScales.getWeight();
+                    //return false;
 
                     if (numTimeTemp > 100){
                         numTimeTemp = 0;
@@ -828,6 +853,19 @@ public class ScaleModule extends Module implements Serializable{
                 try { TimeUnit.MILLISECONDS.sleep(PERIOD_UPDATE); } catch (InterruptedException e) {}
             }
             Log.i(TAG, "interrupt");
+        }
+
+        /**
+         * Преобразовать вес в шкалу шага веса.
+         * Шаг измерения установливается в настройках.
+         *
+         * @param weight Вес для преобразования.
+         * @return Преобразованый вес. */
+        private int getWeightToStepMeasuring(int weight) {
+            int i = weight / getStepScale();
+            i*=getStepScale();
+            return i;
+            //return weight / globals.getStepMeasuring() * globals.getStepMeasuring();
         }
 
         @Override

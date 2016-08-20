@@ -15,6 +15,7 @@ import android.os.Message;
 import android.util.Log;
 import com.konst.module.bluetooth.BluetoothHandler;
 import com.konst.module.bluetooth.BluetoothProcessManager;
+import com.konst.module.scale.InterfaceCallbackScales;
 import com.konst.module.scale.ScaleModule;
 
 import java.io.*;
@@ -27,7 +28,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Kostya
  */
-public abstract class Module implements InterfaceModule, Serializable{
+public abstract class Module implements InterfaceModule{
     private final Context mContext;
     /** Bluetooth устройство модуля весов. */
     protected BluetoothDevice device;
@@ -39,7 +40,7 @@ public abstract class Module implements InterfaceModule, Serializable{
     protected BluetoothAdapter bluetoothAdapter;
     private final Handler handler = new Handler();
     public static final String TAG = Module.class.getName();
-    //protected InterfaceResultCallback resultCallback;
+    protected InterfaceCallbackScales resultCallback;
     /** Константа время задержки для получения байта. */
     private static final int TIMEOUT_GET_BYTE = 1000;
     private boolean flagTimeout;
@@ -66,7 +67,7 @@ public abstract class Module implements InterfaceModule, Serializable{
     protected abstract void dettach();
     protected abstract void attach() throws InterruptedException;
     protected abstract void attachWiFi() throws InterruptedException;
-    protected abstract boolean isVersion();
+    protected abstract boolean isVersion() throws Exception;
     protected abstract void reconnect();
     protected abstract void load();
     /** Получаем соединение с bluetooth весовым модулем.
@@ -76,21 +77,21 @@ public abstract class Module implements InterfaceModule, Serializable{
     //protected abstract void connect() throws IOException, NullPointerException;
     protected abstract void connectWiFi() throws IOException, NullPointerException;
 
-    private Module(Context mContext/*, InterfaceResultCallback event*/) throws Exception {
+    private Module(Context mContext, InterfaceCallbackScales event) throws Exception {
         this.mContext = mContext;
         /** Проверяем и включаем bluetooth. */
         isEnableBluetooth();
-        //resultCallback = event;
+        resultCallback = event;
         Commands.setInterfaceCommand(this);
     }
 
-    protected Module(Context mContext, BluetoothDevice device/*, InterfaceResultCallback event*/)throws Exception, ErrorDeviceException{
-        this(mContext/*, event*/);
+    protected Module(Context mContext, BluetoothDevice device, InterfaceCallbackScales event)throws Exception, ErrorDeviceException{
+        this(mContext, event);
         init(device);
     }
 
-    protected Module(Context mContext, String device/*, InterfaceResultCallback event*/) throws Exception, ErrorDeviceException{
-        this(mContext/*, event*/);
+    protected Module(Context mContext, String device, InterfaceCallbackScales event) throws Exception, ErrorDeviceException{
+        this(mContext, event);
         try{
             BluetoothDevice tmp = bluetoothAdapter.getRemoteDevice(device);
             init(tmp);
@@ -99,7 +100,7 @@ public abstract class Module implements InterfaceModule, Serializable{
         }
     }
 
-    protected Module(Context mContext, final WifiManager wifiManager/*, InterfaceResultCallback event*/) throws Exception, ErrorDeviceException{
+    protected Module(Context mContext, final WifiManager wifiManager, InterfaceCallbackScales event) throws Exception, ErrorDeviceException{
         this.mContext = mContext;
         this.wifiManager = wifiManager;
         WifiConfiguration wc = new WifiConfiguration();
@@ -128,7 +129,7 @@ public abstract class Module implements InterfaceModule, Serializable{
         this.wifiManager.disconnect();
         this.wifiManager.enableNetwork(netId, true);
         this.wifiManager.reconnect();
-        //resultCallback = event;
+        resultCallback = event;
     }
 
     /** Проверяем адаптер bluetooth и включаем.
@@ -203,13 +204,16 @@ public abstract class Module implements InterfaceModule, Serializable{
      * @return Имя bluetooth.
      */
     public String getNameBluetoothDevice() {
-        String name;
+        String name = null;
         try{
             name = device.getName();
         }catch (NullPointerException e){
             name = device.getAddress();
+        }finally {
+            if (name == null)
+                name = device.getAddress();
+            return name;
         }
-        return name;
     }
 
     /** Получаем версию hardware весового модуля.
@@ -220,7 +224,7 @@ public abstract class Module implements InterfaceModule, Serializable{
         return Commands.HRW.getParam();
     }
 
-    class BluetoothConnectReceiver extends BroadcastReceiver {
+    public class BluetoothConnectReceiver extends BroadcastReceiver {
         Context mContext;
         final IntentFilter intentFilter;
         protected boolean isRegistered;
@@ -228,7 +232,7 @@ public abstract class Module implements InterfaceModule, Serializable{
         BluetoothConnectReceiver(Context context){
             mContext = context;
             intentFilter = new IntentFilter(BluetoothDevice.ACTION_ACL_DISCONNECTED);
-            intentFilter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+            //intentFilter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
         }
 
         @Override
@@ -237,11 +241,11 @@ public abstract class Module implements InterfaceModule, Serializable{
             if (action != null) {
                 switch (action){
                     case BluetoothDevice.ACTION_ACL_DISCONNECTED:
-                        bluetoothProcessManager.closeSocket();
+                        try{bluetoothProcessManager.closeSocket();}catch (Exception e){}
                     break;
-                    case BluetoothDevice.ACTION_ACL_CONNECTED:
+                    /*case BluetoothDevice.ACTION_ACL_CONNECTED:
 
-                    break;
+                    break;*/
                     default:
                 }
             }
@@ -265,7 +269,7 @@ public abstract class Module implements InterfaceModule, Serializable{
     protected class RunnableAttach implements Runnable {
         private final BluetoothSocket mmSocket;
         private final UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-        ObjectCommand response;
+        //ObjectCommand response;
 
         public RunnableAttach() throws IOException {
             BluetoothSocket tmp = null;
@@ -306,7 +310,7 @@ public abstract class Module implements InterfaceModule, Serializable{
     public class RunnableConnect implements Runnable {
         private final BluetoothSocket mmSocket;
         private final UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-        ObjectCommand response;
+        //ObjectCommand response;
 
         public RunnableConnect() throws IOException {
             BluetoothSocket tmp = null;
@@ -353,11 +357,16 @@ public abstract class Module implements InterfaceModule, Serializable{
                     ObjectCommand cmd = (ObjectCommand)msg.obj;
                     break;
                 case CONNECT:
-                    if (isVersion()){
-                        isAttach = true;
-                        load();
-                    }else {
+                    try {
+                        if (isVersion()){
+                            isAttach = true;
+                            load();
+                        }else {
+                            dettach();
+                        }
+                    } catch (Exception e) {
                         dettach();
+                        mContext.sendBroadcast(new Intent(InterfaceModule.ACTION_CONNECT_ERROR).putExtra(InterfaceModule.EXTRA_MESSAGE, e.getMessage()));
                     }
                     break;
                 case DISCONNECT:

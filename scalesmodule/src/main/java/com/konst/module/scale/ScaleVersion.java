@@ -12,6 +12,11 @@ package com.konst.module.scale;
  * @author Kostya
  */
 abstract class ScaleVersion {
+    protected ScaleModule scaleModule;
+    /** Текущий вес.  */
+    protected int weight;
+    /** Максимальный вес для весов. */
+    protected int weightMax;
     /** максимальное значение фильтра ацп. */
     protected static final int MAX_ADC_FILTER = 15;
     /** Значение фильтра ацп по умоляанию. */
@@ -32,13 +37,17 @@ abstract class ScaleVersion {
      */
     abstract int updateWeight();
     abstract boolean writeData();
-    abstract int getWeight();
+    //abstract int getWeight();
     abstract int getSensor();
     abstract int getMarginTenzo();
-    abstract int getWeightMax();
-    abstract void setWeightMax(int weightMax);
+    //abstract int getWeightMax();
+    //abstract void setWeightMax(int weightMax);
     abstract boolean isLimit();
     abstract boolean isMargin();
     abstract boolean setOffsetScale();
+
+    public int getWeight() { return weight; }
+    public int getWeightMax() { return weightMax; }
+    public void setWeightMax(int weightMax) { this.weightMax = weightMax;}
 
 }

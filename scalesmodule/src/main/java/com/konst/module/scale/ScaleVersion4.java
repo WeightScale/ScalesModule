@@ -21,18 +21,12 @@ import java.util.Set;
  * @author Kostya
  */
 public class ScaleVersion4 extends ScaleVersion {
-    private final ScaleModule scaleModule;
     /** Показание датчика веса с учетом offset.  */
     private int sensorTenzoOffset;
     /** Разница знечений между значение ноля до и после. */
     private int offset;
-    /** Текущий вес.  */
-    private int weight;
-    /** Максимальный вес для весов. */
-    private int weightMax;
     /** Предельное показани датчика. */
     protected int marginTenzo;
-
 
     ScaleVersion4(ScaleModule module){
         scaleModule = module;
@@ -127,21 +121,12 @@ public class ScaleVersion4 extends ScaleVersion {
     }
 
     @Override
-    public int getWeight() { return weight; }
-
-    @Override
     int getSensor() {
         return offset + sensorTenzoOffset;
     }
 
     @Override
     public int getMarginTenzo() { return marginTenzo; }
-
-    @Override
-    public int getWeightMax() { return weightMax; }
-
-    @Override
-    public void setWeightMax(int weightMax) { this.weightMax = weightMax;}
 
     /**Проверка данных полученых от модуля.
      * Формат параметра данных: [[{@link InterfaceModule#CMD_DATA_CFA}=[значение]] [{@link InterfaceModule#CMD_DATA_WGM}=[значение]] [{@link InterfaceModule#CMD_DATA_LMT}=[значение]]]
@@ -212,7 +197,5 @@ public class ScaleVersion4 extends ScaleVersion {
             return null;
         }
     }
-
-
 
 }

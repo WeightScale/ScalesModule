@@ -16,6 +16,20 @@ public class ObjectScales implements Serializable {
     private int temperature;
     /** Предельное показани датчика. */
     protected int marginTenzo;
+    /** Максимальное показание датчика. */
+    private int limitTenzo;
+    /** Сколько уже стабильно показание веса. */
+    protected int stableNum;
+
+    public ScaleModule.ResultWeight getResultWeight() {
+        return resultWeight;
+    }
+
+    public void setResultWeight(ScaleModule.ResultWeight resultWeight) {
+        this.resultWeight = resultWeight;
+    }
+
+    ScaleModule.ResultWeight resultWeight;
 
     public int getTenzoSensor() {return tenzoSensor;}
     public void setTenzoSensor(int tenzoSensor) {this.tenzoSensor = tenzoSensor;}
@@ -25,5 +39,7 @@ public class ObjectScales implements Serializable {
     public void setBattery(int battery) {this.battery = battery;}
     public int getTemperature() {return temperature;}
     public void setTemperature(int temperature) {this.temperature = temperature;}
+    public int getStableNum() {return stableNum;}
+    public int setStableNum(int stableNum) {return this.stableNum = stableNum;}
 
 }
