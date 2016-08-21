@@ -45,6 +45,8 @@ public class ScaleModule extends Module implements Serializable{
     private ThreadScalesProcess threadScalesProcess;
     private static final String TAG = ScaleModule.class.getName();
     private Thread threadAttach;
+    /** Временная переменная для хранения веса. */
+    private int tempWeight;
     /** Процент заряда батареи (0-100%). */
     private int battery;
     /** Температура в целсиях. */
@@ -790,7 +792,7 @@ public class ScaleModule extends Module implements Serializable{
     private class ThreadScalesProcess extends Thread{
         //private final ObjectScales objectScales;
         private int numTimeTemp = 101;
-        private int tempWeight;
+
 
         private boolean cancel;
         private static final int PERIOD_UPDATE = 20;
