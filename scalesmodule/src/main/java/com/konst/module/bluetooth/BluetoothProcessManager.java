@@ -10,8 +10,8 @@ import com.konst.module.ObjectCommand;
 public class BluetoothProcessManager {
     private final BluetoothSocket mmSocket;
     private BluetoothClientConnect bluetoothClientConnect;
-    BluetoothHandler handler;
-    InterfaceBluetoothClient interfaceBluetoothClient;
+    final BluetoothHandler handler;
+    final InterfaceBluetoothClient interfaceBluetoothClient;
 
     public BluetoothProcessManager(BluetoothSocket socket, BluetoothHandler handler){
         mmSocket = socket;

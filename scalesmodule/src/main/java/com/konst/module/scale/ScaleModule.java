@@ -1,62 +1,45 @@
-/**
- * Copyright (c) 2016. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
- * Morbi non lorem porttitor neque feugiat blandit. Ut vitae ipsum eget quam lacinia accumsan.
- * Etiam sed turpis ac ipsum condimentum fringilla. Maecenas magna.
- * Proin dapibus sapien vel ante. Aliquam erat volutpat. Pellentesque sagittis ligula eget metus.
- * Vestibulum commodo. Ut rhoncus gravida arcu.
- */
 
 package com.konst.module.scale;
 
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 import com.konst.module.*;
-import com.konst.module.bluetooth.BluetoothHandler;
-import com.konst.module.bluetooth.BluetoothProcessManager;
 
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Главный класс для работы с весовым модулем. Инициализируем в теле программы. В абстрактных методах используем
- * возвращеные результаты после запуска метода {@link ScaleModule#create(Context, String, BluetoothDevice, Handler, InterfaceCallbackScales)}}.
+ * возвращеные результаты после запуска метода {@link ScaleModule#create(Context, String, BluetoothDevice, InterfaceCallbackScales)}}.
  * Пример:
  * com.kostya.module.ScaleModule scaleModule = new com.kostya.module.ScaleModule("version module");
  * scaleModule.init("bluetooth device");
  * @author Kostya
  */
-public class ScaleModule extends Module implements Serializable{
+public class ScaleModule extends Module /*implements Serializable*/{
     private static ScaleModule instance;
     private ObjectScales objectScales = new ObjectScales();
     private ScaleVersion version;
     private ThreadScalesProcess threadScalesProcess;
+    private ThreadStableProcess threadStableProcess;
     private static final String TAG = ScaleModule.class.getName();
     private Thread threadAttach;
-    /** Временная переменная для хранения веса. */
-    private int tempWeight;
     /** Процент заряда батареи (0-100%). */
     private int battery;
     /** Температура в целсиях. */
     private int temperature;
     /** Погрешность веса автоноль. */
-    protected int weightError;
+    private int weightError;
     /** Счётчик автообнуления. */
     private int autoNull;
     /** Время срабатывания авто ноля. */
-    protected int timerNull;
+    private int timerNull;
     /** Номер версии программы. */
     private int numVersion;
     /** Имя версии программы */
@@ -84,7 +67,7 @@ public class ScaleModule extends Module implements Serializable{
     /** Делитель для авто ноль. */
     private static final int DIVIDER_AUTO_NULL = 3;
     /** Количество стабильных показаний веса для авто сохранения. */
-    public static final int STABLE_NUM_MAX = 64;
+    public static final int STABLE_NUM_MAX = 150;
     /** Флаг использования авто обнуленияю. */
     private boolean enableAutoNull = true;
 
@@ -190,14 +173,6 @@ public class ScaleModule extends Module implements Serializable{
         instance = new ScaleModule(context, moduleVersion, device, event);
     }
 
-    public static void create(Context context, String moduleVersion, BluetoothDevice device, Handler handler, InterfaceCallbackScales event) throws Exception, ErrorDeviceException {
-        instance = new ScaleModule(context, moduleVersion, device, event);
-    }
-
-    public static void create(Context context, String moduleVersion, String device, Handler handler, InterfaceCallbackScales event) throws Exception, ErrorDeviceException {
-        instance = new ScaleModule(context, moduleVersion, device, event);
-    }
-
     public static void create(Context context, String moduleVersion, String bluetoothDevice, InterfaceCallbackScales event) throws Exception, ErrorDeviceException {
         instance = new ScaleModule(context, moduleVersion, bluetoothDevice, event);
     }
@@ -286,23 +261,16 @@ public class ScaleModule extends Module implements Serializable{
     @Override
     public void dettach() {
         isAttach = false;
-        //stopMeasuringWeight();
-        //stopMeasuringBatteryTemperature();
-        //disconnect();
         stopProcess();
+        stableActionEnable(false);
         bluetoothConnectReceiver.unregister();
         if (bluetoothProcessManager != null){
             bluetoothProcessManager.stopProcess();
         }
-        /*if (threadScaleAttach != null){
-            threadScaleAttach.interrupt();
-            threadScaleAttach.cancel();
-        }*/
-        //version = null;
     }
 
     @Override
-    protected void connectWiFi() throws IOException, NullPointerException {
+    protected void connectWiFi() throws IOException {
         WifiInfo info = wifiManager.getConnectionInfo();
         int ip = info.getIpAddress();
 
@@ -317,7 +285,7 @@ public class ScaleModule extends Module implements Serializable{
 
             socket.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, e.getMessage());
         }
     }
 
@@ -349,7 +317,7 @@ public class ScaleModule extends Module implements Serializable{
     /** Определяем версию весов.
      * @param version Имя версии.
      * @return Экземпляр версии.
-     * @throws Exception
+     * @throws  Exception Ошибка неправильная версия весов.
      */
     private ScaleVersion fetchVersion(int version) throws Exception {
         switch (version) {
@@ -403,7 +371,9 @@ public class ScaleModule extends Module implements Serializable{
 
     /** Получить имя акаунта google.
      * @return Имя акаунта. */
-    public String getUserName() { return getUsername(); }
+    public String getUserName() {
+        return username;
+    }
 
     /** Получить максиматьное значение датчика.
      * @return Значение датчика. */
@@ -480,7 +450,7 @@ public class ScaleModule extends Module implements Serializable{
     }
 
     public String getSpreadSheet() {
-        return getSpreadsheet();
+        return spreadsheet;
     }
 
     public void setSensorTenzo(int sensorTenzo) {
@@ -527,8 +497,6 @@ public class ScaleModule extends Module implements Serializable{
         return Commands.SRC.getParam();
         //return cmd(InterfaceVersions.CMD_SERVICE_COD);
     }
-
-    public String getAddressBluetoothDevice() { return getDevice().getAddress(); }
 
     public int getMarginTenzo() {
         return version.getMarginTenzo(); }
@@ -687,7 +655,7 @@ public class ScaleModule extends Module implements Serializable{
      */
     public boolean setModuleSpreadsheet(String sheet) {
         if (Commands.SGD.setParam(sheet)){
-            setSpreadsheet(sheet);
+            spreadsheet = sheet;
             return true;
         }
         return false;
@@ -699,7 +667,7 @@ public class ScaleModule extends Module implements Serializable{
      */
     public boolean setModuleUserName(String username) {
         if (Commands.UGD.setParam(username)){
-            this.setUsername(username);
+            this.username = username;
             return true;
         }
         return false;
@@ -711,7 +679,7 @@ public class ScaleModule extends Module implements Serializable{
      */
     public boolean setModulePassword(String password) {
         if (Commands.PGD.setParam(password)){
-            this.setPassword(password);
+            this.password = password;
             return true;
         }
         return false;
@@ -723,7 +691,7 @@ public class ScaleModule extends Module implements Serializable{
      */
     public boolean setModulePhone(String phone) {
         if(Commands.PHN.setParam(phone)){
-            this.setPhone(phone);
+            this.phone = phone;
             return true;
         }
         return false;
@@ -795,6 +763,7 @@ public class ScaleModule extends Module implements Serializable{
 
 
         private boolean cancel;
+        /** Время обновления значения веса в милисекундах. */
         private static final int PERIOD_UPDATE = 20;
 
         ThreadScalesProcess(){
@@ -818,19 +787,6 @@ public class ScaleModule extends Module implements Serializable{
                     }
                     objectScales.setResultWeight(resultWeight);
                     objectScales.setTenzoSensor(version.getSensor());
-
-                    if (tempWeight - getStepScale() <= objectScales.getWeight() && tempWeight + getStepScale() >= objectScales.getWeight()) {
-                        if (objectScales.getStableNum() <= STABLE_NUM_MAX){
-                            if (objectScales.getStableNum() == STABLE_NUM_MAX) {
-                                getContext().sendBroadcast(new Intent(InterfaceModule.ACTION_WEIGHT_STABLE));
-                            }
-                            objectScales.setStableNum(objectScales.getStableNum()+1);
-                        }
-                    } else {
-                        objectScales.setStableNum(0);
-                    }
-                    tempWeight = objectScales.getWeight();
-                    //return false;
 
                     if (numTimeTemp > 100){
                         numTimeTemp = 0;
@@ -897,6 +853,53 @@ public class ScaleModule extends Module implements Serializable{
 
         } catch (Exception e) {
             Log.e(TAG, e.getMessage());
+        }
+    }
+
+    public void stableActionEnable(boolean stable){
+        try {
+            if (stable){
+                if (threadStableProcess != null)
+                    threadStableProcess.interrupt();
+                threadStableProcess = new ThreadStableProcess();
+                threadStableProcess.start();
+            }else {
+                if (threadStableProcess != null)
+                    threadStableProcess.interrupt();
+            }
+        }catch (Exception e) {
+            Log.e(TAG, e.getMessage());
+        }
+    }
+
+    private class ThreadStableProcess extends Thread{
+        /** Временная переменная для хранения веса. */
+        private int tempWeight;
+        private boolean cancel;
+
+        @Override
+        public void run() {
+            while (!interrupted() && !cancel){
+                if (tempWeight - getStepScale() <= objectScales.getWeight() && tempWeight + getStepScale() >= objectScales.getWeight()) {
+                    if (objectScales.getStableNum() <= STABLE_NUM_MAX){
+                        if (objectScales.getStableNum() == STABLE_NUM_MAX) {
+                            getContext().sendBroadcast(new Intent(InterfaceModule.ACTION_WEIGHT_STABLE));
+                        }
+                        objectScales.setStableNum(objectScales.getStableNum()+1);
+                    }
+                } else {
+                    objectScales.setStableNum(0);
+                }
+                tempWeight = objectScales.getWeight();
+                getContext().sendBroadcast(new Intent(InterfaceModule.ACTION_SCALES_RESULT).putExtra(InterfaceModule.EXTRA_SCALES, objectScales));
+                try { TimeUnit.MILLISECONDS.sleep(20); } catch (InterruptedException e) {}
+            }
+        }
+
+        @Override
+        public void interrupt() {
+            super.interrupt();
+            cancel = true;
         }
     }
 

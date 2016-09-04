@@ -4,7 +4,7 @@ import android.os.Handler;
 import android.os.Message;
 
 /**
- * Created by Kostya on 21.07.2016.
+ * @author Kostya  on 21.07.2016.
  */
 public class BluetoothHandler extends Handler {
 
@@ -12,7 +12,7 @@ public class BluetoothHandler extends Handler {
         RECEIVE,
         CONNECT,
         DISCONNECT,
-        ERROR;
+        ERROR
     }
 
     @Override

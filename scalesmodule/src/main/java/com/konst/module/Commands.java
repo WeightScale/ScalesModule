@@ -1,7 +1,5 @@
 package com.konst.module;
 
-import java.util.concurrent.TimeUnit;
-
 /**
  * @author Kostya
  */
@@ -57,7 +55,7 @@ public enum Commands {
     private final int time;
     private String cmd;
     public String value;
-    public boolean isReceived = false;
+    public boolean isReceived;
     private static InterfaceModule interfaceModule;
 
     Commands(String n, int t){
@@ -103,7 +101,7 @@ public enum Commands {
      * @return true - комманда выполнена.  */
     public boolean setParam(String param){
         cmd = name + param;
-        return interfaceModule.sendCommand(this).getCommand().equals(this);
+        return interfaceModule.sendCommand(this).getCommand() == this;
         //return interfaceModule.command(this).equals(name);
     }
 
@@ -112,7 +110,7 @@ public enum Commands {
      * @return true - комманда выполнена.  */
     public boolean setParam(int param){
         cmd = name + param;
-        return interfaceModule.sendCommand(this).getCommand().equals(this);
+        return interfaceModule.sendCommand(this).getCommand() == this;
         //return interfaceModule.command(this).equals(name);
     }
 

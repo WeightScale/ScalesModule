@@ -19,8 +19,4 @@ public class ErrorTerminalException extends Exception {
         super(s);
     }
 
-    @Override
-    public String getMessage() {
-        return super.getMessage();
-    }
 }

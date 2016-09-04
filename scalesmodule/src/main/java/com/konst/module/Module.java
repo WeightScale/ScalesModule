@@ -19,7 +19,6 @@ import com.konst.module.scale.InterfaceCallbackScales;
 import com.konst.module.scale.ScaleModule;
 
 import java.io.*;
-import java.util.Timer;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -44,7 +43,7 @@ public abstract class Module implements InterfaceModule{
     /** Константа время задержки для получения байта. */
     private static final int TIMEOUT_GET_BYTE = 1000;
     private boolean flagTimeout;
-    protected boolean isAttach = false;
+    protected boolean isAttach;
 
     /** Константы результат соединения.  */
     public enum ResultConnect {
@@ -185,6 +184,9 @@ public abstract class Module implements InterfaceModule{
         return device;
     }
 
+    public String getAddressBluetoothDevice() {
+        return device.getAddress(); }
+
     /** Получить bluetooth адаптер терминала.
      * @return bluetooth адаптер.
      */
@@ -225,7 +227,7 @@ public abstract class Module implements InterfaceModule{
     }
 
     public class BluetoothConnectReceiver extends BroadcastReceiver {
-        Context mContext;
+        final Context mContext;
         final IntentFilter intentFilter;
         protected boolean isRegistered;
 
@@ -272,7 +274,7 @@ public abstract class Module implements InterfaceModule{
         //ObjectCommand response;
 
         public RunnableAttach() throws IOException {
-            BluetoothSocket tmp = null;
+            BluetoothSocket tmp;
                 if (Build.VERSION.SDK_INT > Build.VERSION_CODES.HONEYCOMB)
                     tmp = device.createInsecureRfcommSocketToServiceRecord(uuid);
                 else
@@ -313,7 +315,7 @@ public abstract class Module implements InterfaceModule{
         //ObjectCommand response;
 
         public RunnableConnect() throws IOException {
-            BluetoothSocket tmp = null;
+            BluetoothSocket tmp;
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.HONEYCOMB)
                 tmp = device.createInsecureRfcommSocketToServiceRecord(uuid);
             else

@@ -18,8 +18,4 @@ public class ErrorModuleException extends Exception {
         super(s);
     }
 
-    @Override
-    public String getMessage() {
-        return super.getMessage();
-    }
 }

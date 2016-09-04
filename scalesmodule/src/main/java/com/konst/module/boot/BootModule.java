@@ -9,20 +9,13 @@
 package com.konst.module.boot;
 
 
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.content.Context;
-import android.content.Intent;
-import android.os.Build;
-import android.os.Message;
 import android.util.Log;
 import com.konst.module.*;
-import com.konst.module.bluetooth.BluetoothHandler;
 import com.konst.module.scale.InterfaceCallbackScales;
 
 import java.io.*;
-import java.util.UUID;
 
 /**
  * Класс для самопрограммирования весового модуля.

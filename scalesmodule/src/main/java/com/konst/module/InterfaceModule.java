@@ -21,25 +21,25 @@ public interface InterfaceModule {
      * Расчитывается при каллибровки весов. Используется для расчета веса.
      * Используется как параметр комманды {@link Commands#DAT}
      * @see Commands#DAT  */
-    public static final String CMD_DATA_CFA = "cfa";
+    String CMD_DATA_CFA = "cfa";
     /** Коэфициэнт Б.
      * Используется как параметр комманды {@link Commands#DAT}
      *
      * @see Commands#DAT
      */
-    public static final String CMD_DATA_CFB = "cfb";
+    String CMD_DATA_CFB = "cfb";
     /** Значение максимального веса для тензодатчика.
      * Используется как параметр комманды {@link Commands#DAT}
      *
      * @see Commands#DAT
      */
-    public static final String CMD_DATA_WGM = "wgm";
+    String CMD_DATA_WGM = "wgm";
     /** Значение максимального значения для тензодатчика.
      * Используется как параметр комманды {@link Commands#DAT}
      *
      * @see Commands#DAT
      */
-    public static final String CMD_DATA_LMT = "lmt";
+    String CMD_DATA_LMT = "lmt";
 
     //String command(Commands commands);
     void write(String command);

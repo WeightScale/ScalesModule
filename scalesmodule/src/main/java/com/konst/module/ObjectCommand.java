@@ -3,12 +3,12 @@ package com.konst.module;
 import java.io.Serializable;
 
 /**
- * Created by Kostya on 24.07.2016.
+ * @author Kostya  on 24.07.2016.
  */
 public class ObjectCommand implements Serializable {
-    Commands command;
+    final Commands command;
     String value = "";
-    boolean isResponse = false;
+    boolean isResponse;
 
     public ObjectCommand(Commands command, String value){
         this.command = command;

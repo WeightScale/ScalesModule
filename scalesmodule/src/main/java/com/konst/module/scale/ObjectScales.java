@@ -29,7 +29,7 @@ public class ObjectScales implements Serializable {
         this.resultWeight = resultWeight;
     }
 
-    ScaleModule.ResultWeight resultWeight;
+    ScaleModule.ResultWeight resultWeight = ScaleModule.ResultWeight.WEIGHT_ERROR;
 
     public int getTenzoSensor() {return tenzoSensor;}
     public void setTenzoSensor(int tenzoSensor) {this.tenzoSensor = tenzoSensor;}

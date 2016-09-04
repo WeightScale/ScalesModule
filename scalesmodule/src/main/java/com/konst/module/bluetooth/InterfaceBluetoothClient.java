@@ -4,7 +4,7 @@ import com.konst.module.Commands;
 import com.konst.module.ObjectCommand;
 
 /**
- * Created by Kostya on 21.07.2016.
+ * @author Kostya  on 21.07.2016.
  */
 public interface InterfaceBluetoothClient {
 

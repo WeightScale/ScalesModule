@@ -14,11 +14,11 @@ import java.util.concurrent.TimeUnit;
  */
 class BluetoothClientConnect extends Thread implements InterfaceBluetoothClient {
     private final BluetoothSocket mmSocket;
-    private BluetoothHandler bluetoothHandler;
-    protected BufferedReader bufferedReader;
-    protected PrintWriter printWriter;
+    private final BluetoothHandler bluetoothHandler;
+    protected final BufferedReader bufferedReader;
+    protected final PrintWriter printWriter;
     private ObjectCommand response;
-    private boolean isTerminate = false;
+    private boolean isTerminate;
     private static final String TAG = ScaleModule.class.getName();
 
     public BluetoothClientConnect(BluetoothSocket socket, BluetoothHandler handler) {
@@ -36,6 +36,7 @@ class BluetoothClientConnect extends Thread implements InterfaceBluetoothClient 
         printWriter = tmpOut;
     }
 
+    @Override
     public void run() {
         bluetoothHandler.obtainMessage(BluetoothHandler.MSG.CONNECT.ordinal()).sendToTarget();
         try {
@@ -43,7 +44,7 @@ class BluetoothClientConnect extends Thread implements InterfaceBluetoothClient 
                 String substring = bufferedReader.readLine();
                 try {
                     Commands cmd = Commands.valueOf(substring.substring(0, 3));
-                    if (cmd.equals(response.getCommand())){
+                    if (cmd == response.getCommand()){
                         response.setValue(substring.replace(cmd.name(),""));
                         response.setResponse(true);
                     }else {
